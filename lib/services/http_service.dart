@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:bitcoin_news/models/news_model.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:http_interceptor/http/intercepted_client.dart';
 import 'http_helper.dart';
 
 class Network {
   static bool isTester = true;
-  static String SERVER_DEV = "newsapi.org";
-  static String SERVER_PROD = "newsapi.org";
+  static const String SERVER_DEV = "newsapi.org";
+  static const String SERVER_PROD = "newsapi.org";
 
   static final client = InterceptedClient.build(
     interceptors: [HttpInterceptor()],
@@ -16,12 +16,11 @@ class Network {
   );
 
   static String getServer() {
-    if (isTester) return SERVER_DEV;
-    return SERVER_PROD;
+    return isTester ? SERVER_DEV : SERVER_PROD;
   }
 
   /* Http Requests */
-  static Future<String?> GET(String api, Map<String, String> params) async {
+  static Future<String?> getRequest(String api, Map<String, String> params) async {
     try {
       var uri = Uri.https(getServer(), api, params);
       var response = await client.get(uri);
@@ -33,10 +32,11 @@ class Network {
     } on SocketException catch (_) {
       rethrow;
     }
+    return null;
   }
 
-  static _throwException(Response response) {
-    String reason = response.reasonPhrase!;
+  static void _throwException(http.Response response) {
+    String reason = response.reasonPhrase ?? 'Unknown error';
     switch (response.statusCode) {
       case 400:
         throw BadRequestException(reason);
@@ -52,24 +52,19 @@ class Network {
     }
   }
 
-  /* Http Apis*/
-  static String API_NEWS_LIST = "/api";
+  /* Http Apis */
+  static const String API_NEWS_LIST = "/v2/everything";
 
   /* Http Params */
   static Map<String, String> paramsEmpty() {
-    Map<String, String> params = {};
-    return params;
+    return {};
   }
 
-  //limit=20&page=0&order=DESC
   static Map<String, String> paramsNewsList(int page) {
-    Map<String, String> params = {};
-    params.addAll({'results': "20", 'page': page.toString()});
-    return params;
+    return {'pageSize': "20", 'page': page.toString(), 'q': 'bitcoin', 'apiKey': '544169807a4045e0ba3be4055e8af97e'};
   }
 
-/* Http Parsing */
-
+  /* Http Parsing */
   static ListOfNews parseNewsList(String response) {
     dynamic json = jsonDecode(response);
     return ListOfNews.fromJson(json);

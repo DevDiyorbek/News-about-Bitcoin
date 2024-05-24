@@ -1,4 +1,5 @@
 import 'package:bitcoin_news/bloc/home_bloc.dart';
+import 'package:bitcoin_news/bloc/home_event.dart';
 import 'package:bitcoin_news/bloc/home_state.dart';
 import 'package:bitcoin_news/models/news_model.dart';
 import 'package:bitcoin_news/services/log_service.dart';
@@ -20,6 +21,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    homeBloc = context.read<HomeBloc>();
+    homeBloc.add(LoadNewsListEvent());
   }
 
   @override
@@ -31,7 +34,7 @@ class _HomePageState extends State<HomePage> {
         }
       },
       builder: (context, state) {
-        if(state is HomeLoadingState){
+        if (state is HomeLoadingState) {
           return viewOfNewsList(true, homeBloc.userList);
         }
         if (state is HomeLoadedNewsListState) {
@@ -46,15 +49,23 @@ class _HomePageState extends State<HomePage> {
   Widget viewOfNewsList(bool isLoading, List<NewsModel> articles) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("News about Bitcoin"), centerTitle: true,),
-      body: Center(
-        child: ListView.builder(
-          controller: scrollController,
-          itemCount: articles.length,
-          itemBuilder: (ctx, index){
-            return itemForNews(articles[index], index);
-          },
-        ),
+        title: const Text("News about Bitcoin"),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          ListView.builder(
+            itemCount: articles.length,
+            itemBuilder: (ctx, index) {
+              return itemForNews(articles[index], index);
+            },
+          ),
+          isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+              : const SizedBox.shrink(),
+        ],
       ),
     );
   }
@@ -100,11 +111,11 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(
-              article.urlToImage,
-              width: 100.0,
-              height: 100.0,
-              fit: BoxFit.cover,
-            ),
+                article.urlToImage,
+                width: 100.0,
+                height: 100.0,
+                fit: BoxFit.cover,
+              ),
               const SizedBox(width: 16.0),
               // Content
               Expanded(

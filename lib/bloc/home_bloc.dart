@@ -21,7 +21,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     emit(HomeLoadingState());
 
-    var response = await Network.GET(Network.API_NEWS_LIST, Network.paramsNewsList(currentPage));
+    var response = await Network.getRequest(Network.API_NEWS_LIST, Network.paramsNewsList(currentPage));
     if (response != null) {
       var users = Network.parseNewsList(response).articles;
       userList.addAll(users);
